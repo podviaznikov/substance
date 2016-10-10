@@ -56,3 +56,11 @@
   height: 2px;
   background: #ccc;
 } */
+
+
+/* HACK! */
+.sc-scroll-pane .se-context-menu-anchor {
+  position: absolute;
+  background: black;
+  color: #fff;
+}

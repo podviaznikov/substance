@@ -4,6 +4,7 @@ import Scrollbar from '../scrollbar/Scrollbar'
 import OverlayContainer from '../overlay/OverlayContainer'
 import GutterContainer from '../gutter/GutterContainer'
 import getRelativeBoundingRect from '../../util/getRelativeBoundingRect'
+import getRelativeMouseBounds from '../../util/getRelativeMouseBounds'
 
 /**
   Wraps content in a scroll pane.
@@ -51,6 +52,7 @@ class ScrollPane extends Component {
     this.handleActions({
       'updateOverlayHints': this._updateOverlayHints
     })
+
   }
 
   dispose() {
@@ -107,14 +109,40 @@ class ScrollPane extends Component {
       }).ref('gutter')
     }
 
+    let contextMenu
+
+    // Render context menu
+    if (this.state.contextMenu) {
+      contextMenu = $$('div').addClass('se-context-menu-anchor').ref('contextMenu')
+
+      // TODO: render user defined context menu content
+      contextMenu.append(
+        $$('div').addClass('sc-context-menu').append(
+          $$('div').append('Copy'),
+          $$('div').append('Paste')
+        )
+      )
+
+      contextMenu.css('top', this.state.mouseBounds.top)
+      contextMenu.css('left', this.state.mouseBounds.left)
+    }
+
+    let contentEl = $$('div').ref('content').addClass('se-content')
+      .append(overlay)
+      .append(gutter)
+      .on('contextmenu', this.onContextMenu)
+
+    if (contextMenu) {
+      contentEl.append(contextMenu)
+    }
+
+    // ERROR: children are not rendered if contextMenu was set in previous rerender
+    // and is now undefined
+    contentEl.append(this.props.children)
+
     el.append(
       $$('div').ref('scrollable').addClass('se-scrollable').append(
-        $$('div').ref('content').addClass('se-content')
-          .append(overlay)
-          .append(gutter)
-          .append(
-            this.props.children
-          )
+        contentEl
       ).on('scroll', this.onScroll)
     )
     return el
@@ -154,6 +182,16 @@ class ScrollPane extends Component {
       this.props.tocProvider.markActiveEntry(this)
     }
     this.emit('scroll', scrollPos, scrollable)
+  }
+
+  onContextMenu(e) {
+    e.preventDefault();
+    let contentContainerEl = this.refs.content.el.el
+    let mouseBounds = getRelativeMouseBounds(e, contentContainerEl)
+    this.setState({
+      contextMenu: !this.state.contextMenu,
+      mouseBounds: mouseBounds
+    })
   }
 
   /**

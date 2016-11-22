@@ -81,7 +81,7 @@ class MarkersManager {
   _updateRegistration(path) {
     let textProperties = this._textProperties[path]
     let config = { containerIds: [], surfaceIds: []}
-    if (textProperties.length === 0) {
+    if (!textProperties || textProperties.length === 0) {
       // TODO: stop watching
       delete this._documentMarkers[path]
       delete this._surfaceMarkers[path]

@@ -111,7 +111,7 @@ class TransactionDocument extends Document {
   }
 
   _onDocumentChanged(change) {
-    console.info('TODO: find out when this is actually used')
+    // console.info('TODO: find out when this is actually used')
     this._apply(change)
   }
 

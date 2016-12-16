@@ -1,6 +1,5 @@
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isObject } from 'lodash-es'
 import isArray from '../../util/isArray'
-import isPlainObject from '../../util/isPlainObject'
 import isString from '../../util/isString'
 import EventEmitter from '../../util/EventEmitter'
 import forEach from '../../util/forEach'
@@ -56,13 +55,7 @@ class Data extends EventEmitter {
     if (!realPath) {
       return undefined
     }
-    if (isString(realPath)) {
-      result = this.nodes[realPath]
-    } else if (realPath.length === 1) {
-      result = this.nodes[realPath[0]]
-    } else {
-      result = this.nodes[realPath[0]][realPath[1]]
-    }
+    result = this._get(realPath)
     if (strict && result === undefined) {
       if (isString(path)) {
         throw new Error("Could not find node with id '"+path+"'.")
@@ -73,12 +66,29 @@ class Data extends EventEmitter {
     return result
   }
 
+  _get(realPath) {
+    let result
+    if (isString(realPath)) {
+      result = this.nodes[realPath]
+    } else if (realPath.length === 1) {
+      result = this.nodes[realPath[0]]
+    } else if (realPath.length === 2) {
+      result = this.nodes[realPath[0]][realPath[1]]
+    } else if (realPath.length === 3) {
+      result = this.nodes[realPath[0]][realPath[1]][realPath[2]]
+    } else {
+      throw new Error('Path of length '+realPath.length+' not supported.')
+    }
+    return result
+  }
+
   getRealPath(path) {
     if (!path) return false
     if (isString(path)) return path
     if (path.length < 3) return path
-    let realPath = []
-    let context = this.nodes[path[0]]
+    let nodeId = path[0]
+    let realPath = [nodeId]
+    let context = this.nodes[nodeId]
     let prop, name
     let L = path.length
     let i = 1
@@ -86,12 +96,13 @@ class Data extends EventEmitter {
       if (!context) return false
       name = path[i]
       prop = context[name]
-      if (isArray(prop) || isPlainObject(prop)) {
-        realPath.push(name)
-        context = prop
-      } else if (isString(prop)) {
+      if (isString(prop)) {
         context = this.nodes[prop]
         realPath = [prop]
+      }
+      else if (isArray(prop) || isObject(prop)) {
+        realPath.push(name)
+        context = prop
       } else {
         return false
       }
@@ -179,10 +190,8 @@ class Data extends EventEmitter {
       console.error('Could not resolve path', path)
       return
     }
-    var node = this.get(realPath[0])
-    var oldValue = node[realPath[1]]
-    node[realPath[1]] = newValue
-
+    let node = this.get(realPath[0])
+    let oldValue = this._set(realPath, newValue)
     var change = {
       type: 'set',
       node: node,
@@ -190,13 +199,25 @@ class Data extends EventEmitter {
       newValue: newValue,
       oldValue: oldValue
     }
-
     if (this.__QUEUE_INDEXING__) {
       this.queue.push(change)
     } else {
       this._updateIndexes(change)
     }
+    return oldValue
+  }
 
+  _set(realPath, newValue) {
+    let oldValue
+    if (realPath.length === 2) {
+      oldValue = this.nodes[realPath[0]][realPath[1]]
+      this.nodes[realPath[0]][realPath[1]] = newValue
+    } else if (realPath.length === 3) {
+      oldValue = this.nodes[realPath[0]][realPath[1]][realPath[2]]
+      this.nodes[realPath[0]][realPath[1]][realPath[2]] = newValue
+    } else {
+      throw new Error('Path of length '+realPath.length+' not supported.')
+    }
     return oldValue
   }
 
@@ -214,9 +235,9 @@ class Data extends EventEmitter {
       console.error('Could not resolve path', path)
       return
     }
-    var node = this.get(realPath[0])
-    var oldValue = this.get(realPath)
-    var newValue
+    let node = this.get(realPath[0])
+    let oldValue = this._get(realPath)
+    let newValue
     if (diff.isOperation) {
       newValue = diff.apply(oldValue)
     } else {
@@ -264,7 +285,7 @@ class Data extends EventEmitter {
         throw new Error('Diff is not supported:', JSON.stringify(diff))
       }
     }
-    this.nodes.set(realPath, newValue)
+    this._set(realPath, newValue)
 
     var change = {
       type: 'update',

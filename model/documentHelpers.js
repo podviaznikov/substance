@@ -43,7 +43,7 @@ documentHelpers.getPropertyAnnotationsForSelection = function(doc, sel, options)
     return [];
   }
   var path = doc.getRealPath(sel.path)
-  var annotations = doc.getIndex('annotations').get(path, sel.startOffset, sel.endOffset);
+  var annotations = doc.getIndex('annotations').get(path, sel.start.offset, sel.end.offset);
   if (options.type) {
     annotations = filter(annotations, DocumentIndex.filterByType(options.type));
   }

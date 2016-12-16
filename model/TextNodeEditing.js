@@ -15,7 +15,7 @@ class TextNodeEditing {
     V: <-|->-|       :   move end by diff to start+L
     VI: <-|--|->     :   move end by total span+L
   */
-  type(tx, range, text) {
+  insertText(tx, range, text) {
     range = this._normalizeRange(tx, range)
     // console.log('### typing over range', range.toString())
     let start = range.start

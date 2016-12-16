@@ -28,7 +28,11 @@ function setupTest(description, fn) {
 var CONTENT = '0123456789'
 
 setupTest("Exporting paragraph", function(t) {
-  var p1 = doc.create({ type: 'paragraph', id: 'p1', content: CONTENT })
+  var p1 = doc.create({
+    type: 'paragraph',
+    id: 'p1',
+    content: CONTENT
+  })
   var el = exporter.convertNode(p1)
   var actual = el.serialize()
   var expected = '<p id="p1">' + CONTENT + '</p>'
@@ -37,8 +41,22 @@ setupTest("Exporting paragraph", function(t) {
 })
 
 setupTest("Exporting paragraph with strong", function(t) {
-  var p1 = doc.create({ type: 'paragraph', id: 'p1', content: CONTENT })
-  doc.create({ type: 'strong', id: 's1', path: ['p1', 'content'], startOffset: 4, endOffset: 7})
+  var p1 = doc.create({
+    type: 'paragraph',
+    id: 'p1',
+    content: CONTENT
+  })
+  doc.create({
+    type: 'strong',
+    id: 's1',
+    start: {
+      path: ['p1', 'content'],
+      offset: 4
+    },
+    end: {
+      offset: 7
+    }
+  })
   var el = exporter.convertNode(p1)
   var actual = el.serialize()
   var expected = '<p id="p1">0123<strong id="s1">456</strong>789</p>'
@@ -47,7 +65,12 @@ setupTest("Exporting paragraph with strong", function(t) {
 })
 
 setupTest("Exporting h1", function(t) {
-  var h1 = doc.create({ type: 'heading', id: 'h1', level: 1, content: CONTENT })
+  var h1 = doc.create({
+    type: 'heading',
+    id: 'h1',
+    level: 1,
+    content: CONTENT
+  })
   var el = exporter.convertNode(h1)
   var actual = el.serialize()
   var expected = '<h1 id="h1">' + CONTENT + '</h1>'
@@ -56,7 +79,12 @@ setupTest("Exporting h1", function(t) {
 })
 
 setupTest("Exporting h2", function(t) {
-  var h2= doc.create({ type: 'heading', id: 'h2', level: 2, content: CONTENT })
+  var h2= doc.create({
+    type: 'heading',
+    id: 'h2',
+    level: 2,
+    content: CONTENT
+  })
   var el = exporter.convertNode(h2)
   var actual = el.serialize()
   var expected = '<h2 id="h2">' + CONTENT + '</h2>'

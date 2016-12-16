@@ -229,9 +229,9 @@ class MarkersIndex {
     const length = op.str.length
     if (length === 0) return
     markers.forEach(function(marker) {
-      console.log('Transforming marker after insert')
-      var start = marker.startOffset;
-      var end = marker.endOffset;
+      // console.log('Transforming marker after insert')
+      var start = marker.start.offset;
+      var end = marker.end.offset;
       var newStart = start;
       var newEnd = end;
       if (pos >= end) return
@@ -244,7 +244,7 @@ class MarkersIndex {
       }
       if (pos < end) {
         newEnd += length;
-        marker.endOffset = newEnd
+        marker.end.offset = newEnd
         if (marker.invalidate) marker.invalidate()
       }
     })
@@ -256,15 +256,15 @@ class MarkersIndex {
     const pos2 = pos1 + length
     if (pos1 === pos2) return
     markers.forEach((marker) => {
-      var start = marker.startOffset;
-      var end = marker.endOffset;
+      var start = marker.start.offset;
+      var end = marker.end.offset;
       var newStart = start;
       var newEnd = end;
       if (pos2 <= start) {
         newStart -= length;
         newEnd -= length;
-        marker.startOffset = newStart
-        marker.endOffset = newEnd
+        marker.start.offset = newStart
+        marker.end.offset = newEnd
       } else if (pos1 >= end) {
         // nothing
       }
@@ -283,10 +283,10 @@ class MarkersIndex {
           return
         }
         if (start !== newStart) {
-          marker.startOffset = newStart
+          marker.start.offset = newStart
         }
         if (end !== newEnd) {
-          marker.endOffset = newEnd
+          marker.end.offset = newEnd
         }
         if (marker.invalidate) marker.invalidate()
       }

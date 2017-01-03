@@ -3,20 +3,21 @@ import map from '../util/map'
 import TreeIndex from '../util/TreeIndex'
 import DocumentIndex from './DocumentIndex'
 
-// PropertyAnnotation Index
-// ----------------
-//
-// Lets us look up existing annotations by path and type
-//
-// To get all annotations for the content of a text node
-//
-//    var aIndex = doc.annotationIndex
-//    aIndex.get(["text_1", "content"])
-//
-// You can also scope for a specific range
-//
-//    aIndex.get(["text_1", "content"], 23, 45)
+/*
+  Index for Annotations.
 
+  @example
+  Lets us look up existing annotations by path and type
+
+  To get all annotations for the content of a text node
+
+     var aIndex = doc.getIndex('annotations')
+     aIndex.get(["text_1", "content"])
+
+  You can also scope for a specific range
+
+     aIndex.get(["text_1", "content"], 23, 45)
+*/
 class AnnotationIndex extends DocumentIndex {
 
   constructor() {
@@ -25,8 +26,6 @@ class AnnotationIndex extends DocumentIndex {
     this.byPath = new TreeIndex()
     this.byType = new TreeIndex()
   }
-
-  get property() { return "path" }
 
   select(node) {
     return Boolean(node._isPropertyAnnotation)
@@ -58,21 +57,25 @@ class AnnotationIndex extends DocumentIndex {
 
   create(anno) {
     this.byType.set([anno.type, anno.id], anno)
-    this.byPath.set(anno.path.concat([anno.id]), anno)
+    this.byPath.set(anno.start.path.concat([anno.id]), anno)
   }
 
   delete(anno) {
-    this.byType.delete([anno.type, anno.id])
-    this.byPath.delete(anno.path.concat([anno.id]))
+    this._delete(anno.type, anno.id, anno.start.path)
+  }
+
+  _delete(type, id, path) {
+    this.byType.delete([type, id])
+    this.byPath.delete(path.concat([id]))
   }
 
   update(node, path, newValue, oldValue) {
-    if (this.select(node) && path[1] === this.property) {
-      this.delete({ id: node.id, type: node.type, path: oldValue })
+    // TODO: this should better be a coordinate op
+    if (this.select(node) && path[1] === 'start' && path[2] === "path") {
+      this._delete(node.type, node.id, oldValue)
       this.create(node)
     }
   }
-
 }
 
 AnnotationIndex.filterByRange = function(start, end) {

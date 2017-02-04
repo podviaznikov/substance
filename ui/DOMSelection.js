@@ -1,7 +1,7 @@
-import last from 'lodash/last'
+import last from '../util/last'
 import Coordinate from '../model/Coordinate'
 import Range from '../model/Range'
-import DefaultDOMElement from './DefaultDOMElement'
+import DefaultDOMElement from '../dom/DefaultDOMElement'
 import TextPropertyComponent from './TextPropertyComponent'
 import InlineNodeComponent from '../packages/inline-node/InlineNodeComponent'
 import IsolatedNodeComponent from '../packages/isolated-node/IsolatedNodeComponent'
@@ -37,13 +37,14 @@ class DOMSelection {
   getSelection(options) {
     let range = this.mapDOMSelection(options)
     let doc = this.surface.getDocument()
-    return doc.createSelection(range)
+    // TODO: consolidate
+    return doc._createSelectionFromRange(range)
   }
 
   getSelectionForDOMRange(wrange) {
     let range = this.mapDOMRange(wrange)
     let doc = this.surface.getDocument()
-    return doc.createSelection(range)
+    return doc._createSelectionFromRange(range)
   }
 
   // function _printStacktrace() {
@@ -164,14 +165,22 @@ class DOMSelection {
         if (comp._isIsolatedNodeComponent) {
           domCoor = IsolatedNodeComponent.getDOMCoordinate(comp, coor)
         } else {
+          let domOffset = 0
+          if (coor.offset > 0) {
+            domOffset = comp.getChildCount()
+          }
           domCoor = {
             container: comp.getNativeElement(),
-            offset: coor.offset
+            offset: domOffset
           }
         }
       }
     } else {
-      comp = this.surface._getTextPropertyComponent(coor.path)
+      // This is broken since we pulled the text-property register out of surface
+      // comp = this.surface._getTextPropertyComponent(coor.path)
+      // HACK: ... this hack replaces the original registry
+      // with a probably not so efficient lookup
+      comp = this.surface.find('.sc-text-property[data-path="'+coor.path.join('.')+'"]')
       if (comp) {
         domCoor = comp.getDOMCoordinate(coor.offset)
       }
@@ -416,11 +425,13 @@ class DOMSelection {
     // try to find it one level higher
     if (node !== this.surface.el) {
       let parent = node.getParent()
-      let nodeIdx = parent.getChildIndex(node)
-      if (dir === 'right') {
-        nodeIdx++
+      if (parent) {
+        let nodeIdx = parent.getChildIndex(node)
+        if (dir === 'right') {
+          nodeIdx++
+        }
+        return this._searchForCoordinate(parent, nodeIdx, options)
       }
-      return this._searchForCoordinate(parent, nodeIdx, options)
     }
 
     return null

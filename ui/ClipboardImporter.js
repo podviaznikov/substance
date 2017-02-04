@@ -1,10 +1,10 @@
-import isArray from 'lodash/isArray'
-import extend from 'lodash/extend'
-import forEach from 'lodash/forEach'
+import extend from '../util/extend'
+import isArray from '../util/isArray'
+import forEach from '../util/forEach'
 import Registry from '../util/Registry'
 import Document from '../model/Document'
 import HTMLImporter from '../model/HTMLImporter'
-import DefaultDOMElement from './DefaultDOMElement'
+import DefaultDOMElement from '../dom/DefaultDOMElement'
 import JSONConverter from '../model/JSONConverter'
 import platform from '../util/platform'
 
@@ -47,7 +47,7 @@ class ClipboardImporter extends HTMLImporter {
     if (this._isWindows) {
       // Under windows we can exploit <!--StartFragment--> and <!--EndFragment-->
       // to have an easier life
-      let match = /<!--StartFragment\-->(.*)<!--EndFragment-->/.exec(html)
+      let match = /<!--StartFragment-->(.*)<!--EndFragment-->/.exec(html)
       if (match) {
         html = match[1]
       }
@@ -61,8 +61,7 @@ class ClipboardImporter extends HTMLImporter {
       el = DefaultDOMElement.parseHTML(html)
       let substanceData = el.find('meta[name="substance"]')
       if (substanceData) {
-        let jsonStr = atob(substanceData.attr('content'))
-        jsonStr = decodeURIComponent(jsonStr)
+        let jsonStr = decodeURIComponent(escape(window.atob(substanceData.attr('content'))))
         try {
           return this.importFromJSON(jsonStr)
         } catch(err) {
@@ -166,7 +165,7 @@ class ClipboardImporter extends HTMLImporter {
 
 }
 
-let _converters = {
+const CONVERTERS = {
   'catch-all-block': {
     type: 'paragraph',
     matchElement: function(el) { return el.is('div') },
@@ -182,7 +181,7 @@ ClipboardImporter._addConverters = function(config) {
     config.converters.forEach(function(conv, name) {
       registry.add(name, conv)
     });
-    forEach(_converters, function(converter, name) {
+    forEach(CONVERTERS, function(converter, name) {
       registry.add(name, converter)
     });
     config.converters = registry

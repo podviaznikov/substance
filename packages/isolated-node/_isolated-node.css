@@ -1,7 +1,20 @@
-.sc-isolated-node {}
+.sc-isolated-node {
+  /* HACK: we add some default margin for all isolated nodes */
+  margin-bottom: 20px;
+}
 .sc-isolated-node > .se-container {
   display: inline-block;
   position: relative;
+  /*
+    HACK: Always make container be 100%, so the content inside is able
+    to take up 100% space too.
+  */
+  width: 100%;
+  /*
+    Add horizontal scrollbars, if the space inside the isolated node exceeds
+    the container space.
+  */
+  overflow: auto;
 }
 .sc-isolated-node > .se-container > .se-blocker {
   position: absolute;
@@ -34,7 +47,7 @@
 }
 .sc-isolated-node.sm-default-style.sm-selected > .se-container,
 .sc-isolated-node.sm-default-style.sm-co-selected > .se-container {
-  background: rgba(163,205,253, 0.6);
+  /*background: rgba(163,205,253, 0.6);*/
   outline: 2px solid;
   outline-color: var(--local-selection-color);
 }
@@ -42,4 +55,14 @@
 .sc-isolated-node.sm-default-style.sm-co-focused > .se-container {
   outline: 2px solid;
   outline-color: var(--local-selection-color);
+}
+
+/* Hide selection fragments when in selected-state */
+.sm-selected > .se-container ::selection {
+  background: transparent;
+}
+
+.sc-isolated-node.sm-selected > .se-container {
+  background: rgba(163, 205, 253, 0.3);
+  outline: 2px solid #A3CDFD;
 }

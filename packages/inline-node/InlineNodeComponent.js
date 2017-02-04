@@ -1,5 +1,5 @@
-import isEqual from 'lodash/isEqual'
-import startsWith from 'lodash/startsWith'
+import startsWith from '../../util/startsWith'
+import isEqual from '../../util/isEqual'
 import Coordinate from '../../model/Coordinate'
 import IsolatedNodeComponent from '../isolated-node/IsolatedNodeComponent'
 
@@ -67,15 +67,17 @@ class InlineNodeComponent extends IsolatedNodeComponent {
 
   _selectNode() {
     // console.log('IsolatedNodeComponent: selecting node.');
+    let editorSession = this.context.editorSession
     let surface = this.context.surface
-    let doc = surface.getDocument()
     let node = this.props.node
-    surface.setSelection(doc.createSelection({
+    editorSession.setSelection({
       type: 'property',
-      path: node.path,
-      startOffset: node.startOffset,
-      endOffset: node.endOffset
-    }))
+      path: node.start.path,
+      startOffset: node.start.offset,
+      endOffset: node.end.offset,
+      containerId: surface.getContainerId(),
+      surfaceId: surface.id
+    })
   }
 
 }
